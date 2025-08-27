@@ -3,6 +3,7 @@
 vd: byte, short, int, long, float,doublr, char, boolean.
 Được lưu trữ trục tiếp trong stack
 Kiểu nguyên thủy không thể gán gtri là null
+
 - Kiểu đối tượng là tham chiếu đến vùng nhớ trong heap, nơi lưu trữ các đối tượng. Mỗi đối tượng là một instance của một class, chứa cả dữ liệu (thuộc tính) và các phương thức để xử lý dữ liệu đó.
 Vd: string, ArrayList, integer, double các đối tượng do ng dùng tự định nghĩa
 lưu trữ đối tượng gốc trong heap, trong khi biến tham chiếu được lưu trữ trong stack.
