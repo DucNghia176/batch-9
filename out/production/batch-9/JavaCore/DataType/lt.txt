@@ -1,0 +1,30 @@
+1. Phân biệt kiểu dữ liệu nguyên thủy và kiểu dữ liệu object.
+- Kiểu nguyên thủy là những kiểu dữ liệu cơ bản nhất, cung cấp các giá trị đơn giản mà ngôn ngữ lập trình hỗ trợ sẵn. Chúng lưu trữ giá trị trực tiếp trong bộ nhớ và không có các phương thức hay thuộc tính đi kèm.
+vd: byte, short, int, long, float,doublr, char, boolean.
+Được lưu trữ trục tiếp trong stack
+Kiểu nguyên thủy không thể gán gtri là null
+- Kiểu đối tượng là tham chiếu đến vùng nhớ trong heap, nơi lưu trữ các đối tượng. Mỗi đối tượng là một instance của một class, chứa cả dữ liệu (thuộc tính) và các phương thức để xử lý dữ liệu đó.
+Vd: string, ArrayList, integer, double các đối tượng do ng dùng tự định nghĩa
+lưu trữ đối tượng gốc trong heap, trong khi biến tham chiếu được lưu trữ trong stack.
+Kiểu đối tượng có giá trị khởi tạp mặc định là null
+
+
+2. Có thể chuyển đổi giữa hai kiểu dữ liệu này không ?
+Có thể chuyển đổi
+- boxing: chuyển nguyên thủy thành object
+- unboxing: chuyển object thành nguyên thủy
+Vd:	int a =3;
+Interger obj = a;
+Int b = obj;
+
+3. Có thể so sánh hai kiểu dữ liệu này với nhau không?
+Kiểu nguyên thủy dùng “==” để so sánh
+Object dùng “==” để so sánh địa chỉ và equals() để so sánh nội dung
+
+
+4. Giá trị khi khởi tạo biến với hai loại kiểu dữ liệu này là gì?
+Int: 0
+Double: 0.0
+Boolean: false
+Char:	'\u0000'
+đối với object là null
