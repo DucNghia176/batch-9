@@ -1,0 +1,15 @@
+Static là từ khóa dùng để khai báo thuộc tính hoặc phương thức thuộc về class chứ không thuộc về từng đối tượng (instance).
+Static có thể truy cập trực tiếp thông qua lớp mà không cần khởi tạo.
+Static dùng khi:
+•	Khi có một giá trị dùng chung cho tất cả các đối tượng.
+•	Khi muốn gọi phương thức mà không cần tạo đối tượng.
+VD: public class MyWebsite {
+    public static String WEBSITE = "gpcoder.com";
+}
+Final trong Java được sử dụng để hạn chế thao tác của người dùng.
+Final không thể thay đổi sau khi đã khởi tạo ra
+Final dùng khi:
+•	Khi cần một giá trị cố định không được thay đổi (giống như hằng số).
+•	Khi không muốn cho phép ghi đè phương thức (override) trong class con.
+•	Khi không muốn cho phép class bị kế thừa.
+
