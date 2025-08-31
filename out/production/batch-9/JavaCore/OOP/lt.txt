@@ -57,3 +57,4 @@ super:
 Dùng để tham chiếu đến lớp cha của đối tượng.
 Gọi phương thức hoặc constructor của lớp cha.
 Ví dụ: super.sound();
+
