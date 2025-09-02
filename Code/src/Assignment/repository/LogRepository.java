@@ -1,5 +1,6 @@
 package Assignment.repository;
 
+import Assignment.entity.LogEntry;
 import Assignment.util.DateTimeUtil;
 
 import java.io.BufferedReader;
@@ -25,7 +26,7 @@ public class LogRepository {
                             String keyword) throws Exception {
 
         BlockingQueue<List<String>> inputQueue = new ArrayBlockingQueue<>(500);
-        BlockingQueue<String> outputQueue = new ArrayBlockingQueue<>(5000);
+        BlockingQueue<List<String>> outputQueue = new ArrayBlockingQueue<>(500);
 
         int numWorkers = Runtime.getRuntime().availableProcessors();
         ExecutorService workers = Executors.newFixedThreadPool(numWorkers);
@@ -41,6 +42,21 @@ public class LogRepository {
         workers.shutdown();
         workers.awaitTermination(1, TimeUnit.HOURS);
         writer.join();
+    }
+
+    private LogEntry parseLogLine(String line) {
+        Matcher matcher = LOG_PATTERN.matcher(line);
+        if (!matcher.matches()) return null;
+
+        String timestampStr = matcher.group(1);
+        String level = matcher.group(2).toUpperCase();
+        String service = matcher.group(3).trim();
+        String message = matcher.group(4);
+
+        LocalDateTime logTime = DateTimeUtil.parseTimestamp(timestampStr);
+        if (logTime == null) return null;
+
+        return new LogEntry(service, message, level, logTime);
     }
 
     private Thread createReader(String inputFilePath,
@@ -69,7 +85,7 @@ public class LogRepository {
 
     private void createWorkers(ExecutorService workers,
                                BlockingQueue<List<String>> inputQueue,
-                               BlockingQueue<String> outputQueue,
+                               BlockingQueue<List<String>> outputQueue,
                                Set<String> targetLevels, Set<String> targetServices,
                                LocalDateTime startTime, LocalDateTime endTime,
                                String keyword) {
@@ -78,27 +94,22 @@ public class LogRepository {
                 try {
                     while (true) {
                         List<String> batch = inputQueue.take();
-                        if (batch.size() == 1 && batch.get(0).equals(POISON_PILL)) break;
-
+                        if (batch.size() == 1 && batch.getFirst().equals(POISON_PILL)) break;
+                        List<String> filteredBatch = new ArrayList<>();
                         for (String line : batch) {
-                            Matcher matcher = LOG_PATTERN.matcher(line);
-                            if (!matcher.matches()) continue;
+                            LogEntry entry = parseLogLine(line);
+                            if (entry == null) continue;
 
-                            String timestampStr = matcher.group(1);
-                            String level = matcher.group(2).toUpperCase();
-                            String service = matcher.group(3).trim();
-                            String message = matcher.group(4).toLowerCase();
+                            if (!targetLevels.isEmpty() && !targetLevels.contains(entry.getLevel())) continue;
+                            if (!targetServices.isEmpty() && !targetServices.contains(entry.getService())) continue;
+                            if (startTime != null && entry.getTimestamp().isBefore(startTime)) continue;
+                            if (endTime != null && entry.getTimestamp().isAfter(endTime)) continue;
+                            if (keyword != null && !keyword.isEmpty() && !entry.getMessage().toLowerCase().contains(keyword.toLowerCase())) continue;
 
-                            LocalDateTime logTime = DateTimeUtil.parseTimestamp(timestampStr);
-                            if (logTime == null) continue;
-
-                            if (!targetLevels.isEmpty() && !targetLevels.contains(level)) continue;
-                            if (!targetServices.isEmpty() && !targetServices.contains(service)) continue;
-                            if (startTime != null && logTime.isBefore(startTime)) continue;
-                            if (endTime != null && logTime.isAfter(endTime)) continue;
-                            if (keyword != null && !keyword.isEmpty() && !message.contains(keyword)) continue;
-
-                            outputQueue.put(line);
+                            filteredBatch.add(line);
+                        }
+                        if (!filteredBatch.isEmpty()) {
+                            outputQueue.put(filteredBatch);
                         }
                     }
                 } catch (Exception e) {
@@ -109,18 +120,20 @@ public class LogRepository {
     }
 
     private Thread createWriter(String outputFilePath,
-                                BlockingQueue<String> outputQueue,
+                                BlockingQueue<List<String>> outputQueue,
                                 ExecutorService workers) {
         return new Thread(() -> {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
                 int count = 0;
                 while (true) {
-                    String line = outputQueue.poll(5, TimeUnit.SECONDS);
-                    if (line == null && workers.isTerminated()) break;
-                    if (line != null) {
-                        bw.write(line);
-                        bw.newLine();
-                        count++;
+                    List<String> batch  = outputQueue.poll(5, TimeUnit.SECONDS);
+                    if (batch  == null && workers.isTerminated()) break;
+                    if (batch  != null) {
+                        for (String line : batch) {
+                            bw.write(line);
+                            bw.newLine();
+                            count++;
+                        }
                     }
                 }
                 System.out.println("Đã ghi xong " + count + " dòng vào " + outputFilePath);
